@@ -6,6 +6,7 @@
 package ecoperations;
 
 import fieldoperations.Fp2Element;
+import java.util.Objects;
 
 /**
  *
@@ -35,11 +36,9 @@ public class ECPoint {
     
     @Override
     public ECPoint clone() {
-        if(identity)
-        {return new ECPoint();
+        if(identity) {
+            return new ECPoint();
         }
-       
-        
         return new ECPoint(x, y);
     }
 
@@ -57,25 +56,46 @@ public class ECPoint {
 
     public void setY(Fp2Element y) {
         this.y = y;
+    }   
+    
+    @Override
+    public String toString() {   
+        String s;
+        if(x == null && y == null) {
+            s = "Inf";
+        }else {   
+            s = "(" + x.toString() + ", " + y.toString() + ")";
+        }
+        return s;
     }
     
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ECPoint other = (ECPoint) obj;
+        if(this.identity && other.identity) {
+            return true;
+        }else if(this.identity && !other.identity) {
+            return false;
+        }else if(!this.identity && other.identity) {
+            return false;
+        }else {
+            if (!Objects.equals(this.x, other.x)) {
+                return false;
+            }
+            if (!Objects.equals(this.y, other.y)) {
+                return false;
+            }
+            return true;
+        }
+    }
     
-      @Override
-   public String toString()
-   {   String s;
-       if(x==null && y==null)
-       {
-       s="Inf";
-       }
-       else
-       {
-   
-  s="("+x.toString()+","+y.toString()+")";
-   
-       }
-    return s;
-   }
-    
-    
-
 }

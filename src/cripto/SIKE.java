@@ -9,8 +9,6 @@ import ecoperations.EC;
 import ecoperations.ECPoint;
 import ecoperations.IO;
 import fieldoperations.Fp2Element;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;

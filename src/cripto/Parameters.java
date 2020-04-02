@@ -27,12 +27,13 @@ public abstract class Parameters {
     EC curve;
     
     
-    protected void init()
-    {A = new Fp2Element(new BigInteger("6"), BigInteger.ZERO);
-     B = new Fp2Element(new BigInteger("1"), BigInteger.ZERO);
-     field = new Fp2Field(p);
-       curve = new EC(A, B, field);
+    protected void init() {
+        A = new Fp2Element(new BigInteger("6"), BigInteger.ZERO);
+        B = new Fp2Element(new BigInteger("1"), BigInteger.ZERO);
+        field = new Fp2Field(p);
+        curve = new EC(A, B, field);
     }
+    
     public BigInteger getP() {
         return p;
     }

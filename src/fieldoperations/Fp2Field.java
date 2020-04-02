@@ -25,7 +25,7 @@ public class Fp2Field {
         this.p = p;
         BigInteger two = new BigInteger("2");
         BigInteger n = p.multiply(p);
-                n=n.subtract(BigInteger.ONE).divide(two);
+        n = n.subtract(BigInteger.ONE).divide(two);
         factorize(n);
 
        computeNonResidueQuadratic();
@@ -247,50 +247,38 @@ public class Fp2Field {
         return true;
     }
     
-  public static void main(String[] args)
-  {
-     BigInteger p=BigInteger.probablePrime(100, new SecureRandom());
-     BigInteger four=new BigInteger("4");
-     BigInteger out=p.mod(four);
-     System.out.println(out);
-     if (out.compareTo(BigInteger.ONE)!=0)
-     {  System.out.println(p);
-        Fp2Field field=new Fp2Field(p);
-        Fp2Element x,y, z;
-        
-        x=field.getRandomElement();
-        y=null;
-        
-         int c=0;
-         int f=0;
-       for(int i=0;i<100;i++)
-       { x=field.getRandomElement();
-          y=field.sqroot(x);
-        
-         if(y!=null)
-         {   if(field.areEqual(x, field.square(y)))
-              {
-              f++;
-              }
-             
-           c=c+1;
-         }
-         else
-         {
-         System.out.println("no residuo cuadratico");
-         }
-          
-       }
-       
-       System.out.println(c);
-       System.out.println(f);
-// System.out.println(field.multiply(z,field.mInverse(z)));
-        
-     
-     }
-  
-      
- 
+    public static void main(String[] args) {
+        BigInteger p = BigInteger.probablePrime(100, new SecureRandom());
+        BigInteger four = new BigInteger("4");
+        BigInteger out = p.mod(four);
+        System.out.println(out);
+        if (out.compareTo(BigInteger.ONE) != 0) {  
+            System.out.println(p);
+            Fp2Field field = new Fp2Field(p);
+            Fp2Element x, y, z;
+
+            x = field.getRandomElement();
+            y = null;
+
+            int c = 0;
+            int f = 0;
+            for(int i = 0; i < 100; i++) { 
+                x = field.getRandomElement();
+                y = field.sqroot(x);
+
+                if (y != null) {
+                    if (field.areEqual(x, field.square(y))) {
+                        f++;
+                    }
+                    c = c+1;
+                }else {
+                    System.out.println("no residuo cuadratico");
+                }
+            }
+            System.out.println(c);
+            System.out.println(f);
+            // System.out.println(field.multiply(z,field.mInverse(z)));
+        }
+    }
     
-  }
 }
