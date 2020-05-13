@@ -11,6 +11,7 @@ import fieldoperations.Fp2Element;
 import fieldoperations.Fp2Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,6 +39,16 @@ public class EC {
 
     public Fp2Element getB() {
         return b;
+    }
+    
+    @Override
+    public String toString() {
+        return "(" + b + ")*y^2 = x^3 + (" + a + ")*x^2 + x";
+    }
+    
+    @Override
+    public EC clone() {
+        return new EC(a, b, field);
     }
     
     /*
@@ -500,7 +511,9 @@ public class EC {
         }
         ECPoint T;
         for (int e = e3 - 1; e >= 0; e = e - 1) {
+            //System.out.println("E " + (e3 - e -1) + ": " + ec);
             T = ec.xTPLe(S, e);
+           // System.out.println(ec.xTPL(T));
             if(!T.getX().equals(S.x)) { 
                 S = ec.eval_3_iso(S, T);
             }
@@ -512,7 +525,155 @@ public class EC {
             ec = ec.curve_3_iso(T);
             // System.out.println(S);
         }
+        System.out.println("E" + e3 + ": " + ec);
+        System.out.println("J Inv: " + ec.j_inv());
         return new IO(ec, list3);
+    }
+    
+    public IO iso_3_e_v1(ECPoint S, int e3) {
+        EC ec = new EC(this.a, this.b, this.field);
+        ArrayList<ECPoint> list = new ArrayList<>();
+        ECPoint P = S.clone();
+        P = ec.xTPL(P);
+        for (int i = 0; i < e3 - 1; i++) {
+            P = ec.xTPL(P);
+            list.add(P.clone());
+        }
+        P = S.clone();
+        ECPoint T;
+        for (int i = 1; i < e3; i++) {
+            //System.out.println("E " + (i-1) + ": " + ec);
+            //System.out.println(list);
+            T = list.get(e3 - i - 1).clone();
+            //System.out.println(ec.xTPL(T));
+            for (int j = 0; j < e3 - i - 1; j++) {
+                if(!T.getX().equals(list.get(j).x)) {
+                    list.set(j, ec.eval_3_iso(list.get(j), T).clone());
+                    //System.out.println(j);
+                }
+            }
+            //System.out.println("-------------------");
+            if(!T.getX().equals(S.x)) { 
+                P = ec.eval_3_iso(P, T);
+            }
+            ec = ec.curve_3_iso(T);
+        }
+        //System.out.println("E" + (e3-1) + ": " + ec);
+        //System.out.println("-------------------");
+        T = ec.xTPL(P);
+        ec = ec.curve_3_iso(T);
+        System.out.println("E" + e3 + ": " + ec);
+        System.out.println("J Inv: " + ec.j_inv());
+        return new IO(ec, null);
+    }
+    
+    public IO iso_3_e_v2(ECPoint S, int e3) {
+        EC ec = new EC(this.a, this.b, this.field);
+        ArrayList<ECPoint> list = new ArrayList<>();
+        ECPoint P = S.clone();
+        P = ec.xTPL(P);
+        for (int i = 0; i < e3 - 2; i++) {
+            P = ec.xTPL(P);
+            list.add(P.clone());
+        }
+        P = S.clone();
+        ECPoint T;
+        for (int i = 2; i < e3; i++) {
+            T = list.get(e3 - i - 1).clone();
+            for (int j = 0; j < e3 - i - 1; j++) {
+                if(!T.getX().equals(list.get(j).x)) {
+                    list.set(j, ec.eval_3_iso(list.get(j), T).clone());
+                }
+            }
+            if(!T.getX().equals(S.x)) { 
+                P = ec.eval_3_iso(P, T);
+            }
+            ec = ec.curve_3_iso(T);
+        }
+        T = ec.xTPL(P);
+        if(!T.getX().equals(S.x)) { 
+            P = ec.eval_3_iso(P, T);
+        }
+        ec = ec.curve_3_iso(T);
+        ec = ec.curve_3_iso(P);
+        System.out.println("E" + e3 + ": " + ec);
+        System.out.println("J Inv: " + ec.j_inv());
+        return new IO(ec, null);
+    }
+    
+    public IO iso_3_e_v3(ECPoint S, int e3, List<ECPoint> list, ArrayList<Integer> strat) {
+        //EC ec = new EC(this.a, this.b, this.field);
+        List<ECPoint> list3 = null;
+        if (list != null) {
+            list3 = new ArrayList(list);
+        }
+        if(strat.isEmpty()) {
+            //ECPoint T = this.xTPL(S);
+            if (list3 != null) {
+                for (int i = 0; i < list3.size(); i++) {
+                    list3.set(i, this.eval_3_iso(list3.get(i), S));
+                }
+            }
+            //ec = ec.curve_3_iso(T);
+            return new IO(this.curve_3_iso(S), list3);
+        }
+        int n = strat.get(0);
+        ArrayList<Integer> L = new ArrayList<>(strat.subList(1, e3 - n));
+//        if(L.isEmpty() && strat.size() > 1) {
+//            L.add(strat.get(1));
+//        }
+        ArrayList<Integer> R = new ArrayList<>(strat.subList(e3 - n, e3 - 1));
+//        if(!R.isEmpty() && strat.size() == 2) {
+//            R = new ArrayList<>();
+//        }
+        ECPoint T = this.xTPLe(S, n);
+        ArrayList<ECPoint> points = new ArrayList<>();
+        points.add(S.clone());
+        if(list3 != null) {
+            points.addAll(list3);
+        }
+        IO io1 = this.iso_3_e_v3(T, L.size() + 1, points.subList(0, points.size()), L);
+        EC ec = io1.getEC();
+        points = new ArrayList<>(io1.getList());
+        IO io2 = ec.iso_3_e_v3(points.get(0), R.size() + 1, points.subList(1, points.size()), R);
+        ec = io2.getEC();
+        points = new ArrayList<>(io2.getList());
+        return new IO(ec, points);
+    }
+    
+    public IO iso_2_e(ECPoint S, int e2) {
+        EC ec = new EC(this.a, this.b, this.field);
+        ArrayList<ECPoint> list = new ArrayList<>();
+        ECPoint P = S.clone();
+        P = ec.xDBL(P);
+        for (int i = 0; i < e2 - 1; i++) {
+            P = ec.xDBL(P);
+            list.add(P.clone());
+        }
+        P = S.clone();
+        ECPoint T;
+        for (int i = 1; i < e2; i++) {
+            System.out.println("E " + (i-1) + ": " + ec);
+            //System.out.println(list);
+            T = list.get(e2 - i - 1).clone();
+            for (int j = 0; j < e2 - i - 1; j++) {
+                if(!T.getX().equals(list.get(j).x)) {
+                    list.set(j, ec.eval_2_iso(list.get(j), T).clone());
+                    //System.out.println(j);
+                }
+            }
+            System.out.println("-------------------");
+            if(!T.getX().equals(S.x)) { 
+                P = ec.eval_2_iso(P, T);
+            }
+            ec = ec.curve_2_iso(T);
+        }
+        System.out.println("E" + (e2-1) + ": " + ec);
+        System.out.println("-------------------");
+        T = ec.xDBL(P);
+        ec = ec.curve_2_iso(T);
+        System.out.println("E" + e2 + ": " + ec);
+        return new IO(ec, null);
     }
     
     /*
@@ -575,15 +736,30 @@ public class EC {
     
     public static void main(String[] args) {
         Parameters params = new SIKEp434();
-        ECPoint R1 = params.getCurve().addPointMult(BigInteger.TEN, params.getQ2(), params.getP3());
+        //ECPoint R1 = params.getCurve().addPointMult(BigInteger.TEN, params.getQ2(), params.getP3());
         ECPoint R2 = params.getCurve().addPointMult(params.getQ2(), params.getP3(), BigInteger.TEN);
-        ECPoint R3 = params.getCurve().xADD(params.getQ2(), params.getCurve().double_and_add(BigInteger.TEN, params.getP3()));
-        System.out.println(R1);
-        System.out.println(R2);
-        System.out.println(R3);
-        System.out.println(R1.equals(R2));
-        System.out.println(R1.equals(R3));
-        System.out.println(R2.equals(R3));
+        //ECPoint R3 = params.getCurve().xADD(params.getQ2(), params.getCurve().double_and_add(BigInteger.TEN, params.getP3()));
+        //System.out.println(R1);
+        //System.out.println(R2);
+        //System.out.println(R3);
+        //System.out.println(R1.equals(R2));
+        //System.out.println(R1.equals(R3));
+        //System.out.println(R2.equals(R3));
+        EC a = params.getCurve().clone();
+        a.iso_3_e(R2, 7, null);
+        //System.out.println("******************");
+        //EC b = params.getCurve().clone();
+        //b.iso_3_e_v1(R2, 5);
+        System.out.println("******************");
+        EC c = params.getCurve().clone();
+        c.iso_3_e_v2(R2, 7);
+        System.out.println("******************");
+        Integer[] vals = {3,2,1,1,2,1};
+        ArrayList<Integer> strat = new ArrayList<>(Arrays.asList(vals));
+        EC d = params.getCurve().clone();
+        IO io = d.iso_3_e_v3(R2, 7, null, strat);
+        System.out.println("E" + 7 + ": " + io.getEC());
+        System.out.println("J Inv: " + io.getEC().j_inv());
     }
 
 }
