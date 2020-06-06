@@ -78,12 +78,12 @@ public class SIDH {
 
     public Fp2Element[] isogen2(BigInteger sk2) {
         //System.out.println("sk2"+sk2);
-        ECPoint S = parameters.curve.double_and_add(sk2, parameters.Q2);
-        S = parameters.curve.xADD(parameters.P2, S);
+        ECPoint S = parameters.curve.addPointMult(parameters.P2,parameters.Q2,sk2 );
+       // S = parameters.curve.xADD(parameters.P2, S);
         List<ECPoint> list = new ArrayList();
         list.add(parameters.P3);
         list.add(parameters.Q3);
-        IO out = parameters.curve.iso_2_e(S, parameters.e2, list);
+        IO out = parameters.curve.iso_2_e_v11(S, parameters.e2, list);
         Fp2Element[] output = new Fp2Element[3];
         ECPoint P3o = out.getList().get(0);
         output[0] = P3o.getX();
@@ -97,14 +97,14 @@ public class SIDH {
 
     public Fp2Element[] isogen3(BigInteger sk3) {
         //System.out.println(sk3);
-        ECPoint S = parameters.curve.double_and_add(sk3, parameters.Q3);
+        ECPoint S = parameters.curve.addPointMult( parameters.P3,parameters.Q3,sk3);
 
-        S = parameters.curve.xADD(parameters.P3, S);
+       // S = parameters.curve.xADD(parameters.P3, S);
         List<ECPoint> list = new ArrayList();
         list.add(parameters.P2);
         list.add(parameters.Q2);
 
-        IO out = parameters.curve.iso_3_e(S, parameters.e3, list);
+        IO out = parameters.curve.iso_3_e_v11(S, parameters.e3, list);
         Fp2Element[] output = new Fp2Element[3];
         ECPoint P2o = out.getList().get(0);
         output[0] = P2o.getX();
@@ -124,11 +124,11 @@ public class SIDH {
 
         EC ec = new EC(out[2], out[3], parameters.field);
 
-        ECPoint S = ec.double_and_add(sk2, lQ2);
+        ECPoint S = ec.addPointMult(lP2,lQ2,sk2);
 
-        S = ec.xADD(S, lP2);
+       // S = ec.xADD(S, lP2);
 
-        IO o = ec.iso_2_e(S, parameters.e2, null);
+        IO o = ec.iso_2_e_v11(S, parameters.e2, null);
 
         return o.getEC().j_inv();
     }
@@ -141,11 +141,11 @@ public class SIDH {
 
         EC ec = new EC(out[2], out[3], parameters.field);
 
-        ECPoint S = ec.double_and_add(sk3, lQ3);
+        ECPoint S = ec.addPointMult( lP3,lQ3,sk3);
 
-        S = ec.xADD(S, lP3);
+       // S = ec.xADD(S, lP3);
 
-        IO o = ec.iso_3_e(S, parameters.e3, null);
+        IO o = ec.iso_3_e_v11(S, parameters.e3, null);
 
         return o.getEC().j_inv();
     }
